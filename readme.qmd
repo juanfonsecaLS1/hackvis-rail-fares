@@ -1,0 +1,142 @@
+---
+title: "Rail fare comparison"
+format: html
+---
+
+## Packages
+
+
+```{r}
+library(sf)
+library(tidyverse)
+library(tmap)
+```
+
+## Prices
+
+```{r}
+fares <- read_csv("rail_price.csv")
+```
+
+## Lines
+
+```{r}
+network_lines <- st_read("uk_railway_network_edges.geojson")
+```
+
+```{r}
+plot(network_lines)
+```
+
+## Stations
+
+```{r}
+stations <- st_read("GB train stations/GB train stations.shp")
+plot(stations)
+```
+
+
+
+```{r}
+selected_stations <- stations |>
+  filter(Code %in% fares$O) |> 
+  left_join(fares |>
+              filter(D %in% c("KGX","EUS")) |>
+              select(O,price),
+            by = c("Code"="O")) |> 
+  rename(price_to = price) |> 
+  left_join(fares |>
+              filter(O %in% c("KGX","EUS")) |>
+              select(D,price),
+            by = c("Code"="D")) |> 
+  rename(price_from = price)
+
+bounds <- selected_stations |>
+  st_union() |>
+  st_buffer(10e3) |> 
+  st_convex_hull() |>
+  st_as_sf()
+
+
+
+
+clipped_rail_network <- network_lines[bounds,] 
+
+```
+
+ ##
+ 
+ Using the rail model spatial data
+ 
+ 
+```{r}
+rail_model <- st_read("network-model.gpkg",layer="ReferenceLines")
+
+(rail_model |> st_transform(st_crs(bounds)))[bounds,] |> qtm()
+```
+
+clippling and subsetting
+
+```{r}
+clipped_net <- (rail_model |> filter(str_detect(ELR,"(ECM|LEC|WJL|CGJ|DOL)"))|> st_transform(st_crs(bounds)))[bounds,]
+```
+
+```{r}
+plot(clipped_net)
+```
+
+
+
+## Visuals
+
+```{r}
+tmap_mode("view")
+tm_shape(clipped_net)+
+  tm_lines("gray60")+
+  tm_shape(selected_stations)+
+  tm_dots("price_from",size = "price_from")
+```
+
+
+
+
+
+
+```{r}
+library(stplanr)
+
+
+ODlines <- od2line(fares,zones = selected_stations,zone_code = "Code",origin_code = "O",dest_code = "D")
+
+tm_shape(ODlines)+
+  tm_lines(col = "price")
+```
+
+
+
+```{r}
+stations_coords <- selected_stations |>
+  st_drop_geometry() |> 
+  bind_cols(selected_stations |> st_coordinates() |> data.frame()) |> 
+  mutate(
+    x.end = -0.122926,
+    y.end = 51.53088)
+```
+
+
+```{r}
+ggplot()+
+  geom_sf(data = clipped_net)+
+  geom_curve(data = stations_coords, aes(x= X,
+                                         xend = x.end,
+                                         y = Y,
+                                         yend = y.end,
+                                         color = price_to,
+                                         linewidth = price_to),alpha = 0.5)+
+  theme_void()+
+  scale_color_viridis_b()+
+  geom_sf(data = selected_stations,col = "gray" ,size= 6)
+  
+```
+
+

@@ -1,0 +1,17 @@
+﻿O,D,price,line,Code
+LDS,KGX,51.5,LNER,Leeds
+WKF,KGX,56.6,LNER,Leeds
+DON,KGX,41.1,LNER,Leeds
+PBO,KGX,41.2,LNER,Leeds
+KGX,PBO,17.4,LNER,Leeds
+KGX,DON,55.5,LNER,Leeds
+KGX,WKF,53.8,LNER,Leeds
+KGX,LDS,47.8,LNER,Leeds
+LIV,EUS,76.3,LNER,Liverpool
+RUN,EUS,48,LNER,Liverpool
+CRE,EUS,38.5,LNER,Liverpool
+MKC,EUS,24.2,LNER,Liverpool
+EUS,MKC,43,LNER,Liverpool
+EUS,CRE,26,LNER,Liverpool
+EUS,RUN,23.6,LNER,Liverpool
+LIV,LIV,28,LNER,Liverpool
